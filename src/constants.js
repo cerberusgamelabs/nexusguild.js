@@ -1,0 +1,68 @@
+export const ChannelTypes = Object.freeze({
+    TEXT: 0,
+    VOICE: 2,
+    CATEGORY: 4,
+    ANNOUNCEMENT: 5,
+    THREAD: 11,
+    PRIVATE_THREAD: 12,
+    FORUM: 15
+});
+
+export const ButtonStyles = Object.freeze({
+    PRIMARY: 1,
+    SECONDARY: 2,
+    SUCCESS: 3,
+    DANGER: 4,
+    LINK: 5
+});
+
+export const CommandOptionTypes = Object.freeze({
+    STRING: 3,
+    INTEGER: 4,
+    BOOLEAN: 5,
+    USER: 6,
+    CHANNEL: 7,
+    ROLE: 8,
+    NUMBER: 10
+});
+
+export const InteractionCallbackTypes = Object.freeze({
+    CHANNEL_MESSAGE_WITH_SOURCE: 4,
+    DEFERRED_CHANNEL_MESSAGE_WITH_SOURCE: 5
+});
+
+export const MessageFlags = Object.freeze({
+    EPHEMERAL: 64
+});
+
+export const GatewayEvents = Object.freeze({
+    READY: 'READY',
+    GUILD_CREATE: 'GUILD_CREATE',
+    MESSAGE_CREATE: 'MESSAGE_CREATE',
+    MESSAGE_UPDATE: 'MESSAGE_UPDATE',
+    MESSAGE_DELETE: 'MESSAGE_DELETE',
+    REACT_ADD: 'REACT_ADD',
+    REACT_REMOVE: 'REACT_REMOVE',
+    MEMBER_JOIN: 'MEMBER_JOIN',
+    MEMBER_LEAVE: 'MEMBER_LEAVE',
+    CHANNEL_CREATE: 'CHANNEL_CREATE',
+    CHANNEL_UPDATE: 'CHANNEL_UPDATE',
+    CHANNEL_DELETE: 'CHANNEL_DELETE',
+    ROLE_UPDATE: 'ROLE_UPDATE',
+    INTERACTION_CREATE: 'INTERACTION_CREATE',
+    GUILD_MEMBER_UPDATE: 'GUILD_MEMBER_UPDATE'
+});
+
+export const WebhookEvents = Object.freeze({
+    MESSAGE_CREATE: 'MESSAGE_CREATE',
+    MESSAGE_UPDATE: 'MESSAGE_UPDATE',
+    MESSAGE_DELETE: 'MESSAGE_DELETE',
+    REACT_ADD: 'REACT_ADD',
+    REACT_REMOVE: 'REACT_REMOVE',
+    MEMBER_JOIN: 'MEMBER_JOIN',
+    MEMBER_LEAVE: 'MEMBER_LEAVE',
+    CHANNEL_CREATE: 'CHANNEL_CREATE',
+    CHANNEL_UPDATE: 'CHANNEL_UPDATE',
+    CHANNEL_DELETE: 'CHANNEL_DELETE',
+    ROLE_UPDATE: 'ROLE_UPDATE'
+});

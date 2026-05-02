@@ -1,0 +1,45 @@
+{
+  "name": "nexusguild.js",
+  "version": "0.1.0",
+  "description": "NexusGuild.js is a beginner-friendly Node.js wrapper for the NexusGuild bot API",
+  "type": "module",
+  "main": "./src/index.js",
+  "files": [
+    "src",
+    "README.md",
+    "LICENSE"
+  ],
+  "exports": {
+    ".": "./src/index.js"
+  },
+  "engines": {
+    "node": ">=18"
+  },
+  "keywords": [
+    "nexusguild",
+    "bot",
+    "sdk",
+    "api",
+    "wrapper",
+    "discord-like"
+  ],
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/cerberusgamelabs/nexusguild.js.git"
+  },
+  "homepage": "https://github.com/cerberusgamelabs/nexusguild.js",
+  "bugs": {
+    "url": "https://github.com/cerberusgamelabs/nexusguild.js/issues"
+  },
+  "license": "MIT",
+  "publishConfig": {
+    "access": "public"
+  },
+  "dependencies": {
+    "socket.io-client": "^4.8.1"
+  },
+  "scripts": {
+    "test": "node --test",
+    "prepublishOnly": "npm test"
+  }
+}
