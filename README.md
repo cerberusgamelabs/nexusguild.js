@@ -1,42 +1,25 @@
 # NexusGuild.js
 
-Node.js wrapper for the NexusGuild bot API with a modular, beginner-friendly interface.
+Beginner-friendly Node.js wrapper for the NexusGuild bot API and bot gateway.
 
-## Goals
+It gives you:
 
-- Make common bot tasks easy to discover
-- Hide raw REST paths behind clear method names
-- Keep the SDK modular so advanced users can still work close to the API
+- clean REST helpers for the current `/api/v1` bot API
+- a gateway wrapper for `/bot-gateway`
+- interaction helpers for slash commands and buttons
+- portal-side helpers for bot management, commands, and webhook subscriptions
 
 ## Install
-
-This repo is currently local scaffolding. Once published, the intended usage is:
 
 ```bash
 npm install nexusguild.js
 ```
 
-## Publishing Notes
+## Requirements
 
-This package is being structured for npm publication.
-
-Current publishing assumptions:
-
-- npm package name: `nexusguild.js`
-- branding: `NexusGuild.js`
-- license: `MIT`
-- JavaScript-first release with no TypeScript requirement
-
-Still undecided:
-
-- final GitHub repository URL
-
-Recommended first publish flow:
-
-```bash
-npm login
-npm publish --access public
-```
+- Node.js `18+`
+- ESM imports
+- a NexusGuild bot token for bot-runtime usage
 
 ## Quick Start
 
@@ -47,22 +30,11 @@ const client = new NexusGuildClient({
   token: process.env.NEXUSGUILD_BOT_TOKEN,
   baseUrl: process.env.NEXUSGUILD_BASE_URL
 });
+
+await client.channel('2255000000000000000').send('Hello from my bot');
 ```
 
-The package also exports named constants so beginners do not need to memorize magic numbers.
-
-If you also want to manage bots, slash commands, or webhook subscriptions from the developer side, use the portal client:
-
-```js
-import { NexusGuildPortalClient } from 'nexusguild.js';
-
-const portal = new NexusGuildPortalClient({
-  baseUrl: process.env.NEXUSGUILD_BASE_URL,
-  sessionCookie: process.env.NEXUSGUILD_SESSION_COOKIE
-});
-```
-
-## Beginner Examples
+## Core Examples
 
 ### Give a member a role
 
@@ -85,14 +57,14 @@ await client
 ### Send a message
 
 ```js
-await client
-  .channel('2255000000000000000')
-  .send('Hello from my bot');
+await client.channel(channelId).send('Hello from my bot');
 ```
 
 ### Send a message with buttons
 
 ```js
+import { ButtonStyles } from 'nexusguild.js';
+
 await client.channel(channelId).messages.create({
   content: 'Choose a role',
   components: [
@@ -109,12 +81,6 @@ await client.channel(channelId).messages.create({
     }
   ]
 });
-```
-
-With imports:
-
-```js
-import { ButtonStyles } from 'nexusguild.js';
 ```
 
 ### Add a reaction as the bot
@@ -136,7 +102,7 @@ await client
   .reply('Pong!');
 ```
 
-### Use the gateway like a beginner-friendly bot client
+## Gateway
 
 ```js
 const gateway = client.gateway();
@@ -145,23 +111,16 @@ gateway.onReady(({ bot }) => {
   console.log(`Connected as ${bot.name}`);
 });
 
-gateway.onMemberJoin(async (member) => {
-  if (member.guild_id === '2254403363506491392') {
-    await client
-      .guild(member.guild_id)
-      .member(member.user.id)
-      .addRole('2262212733099315200');
-  }
+gateway.onCommand('ping', async (ctx) => {
+  await ctx.reply('Pong!');
 });
 
 gateway.connect();
 ```
 
-### Handle member role and nickname updates
+### Member updates
 
 ```js
-const gateway = client.gateway();
-
 gateway.onMemberUpdate((member) => {
   if (member.added_roles?.length) {
     console.log('Roles added:', member.added_roles);
@@ -175,27 +134,34 @@ gateway.onMemberUpdate((member) => {
     console.log(`Nickname changed from ${member.nick_change.old} to ${member.nick_change.new}`);
   }
 });
-
-gateway.connect();
 ```
 
-### Handle a slash command without parsing raw interaction payloads
+### Reaction events
 
 ```js
-const gateway = client.gateway();
-
-gateway.onCommand('ping', async (ctx) => {
-  await ctx.reply('Pong!');
+gateway.onReactAdd((event) => {
+  console.log('Reaction added:', event.message_id, event.emoji, event.user.username);
 });
 
-gateway.connect();
+gateway.onReactRemove((event) => {
+  console.log('Reaction removed:', event.message_id, event.emoji, event.user.username);
+});
 ```
 
-### Handle a button click with a clean helper
+`REACT_ADD` and `REACT_REMOVE` include:
+
+- `message_id`
+- `channel_id`
+- `guild_id`
+- `emoji`
+- `user`
+  - `id`
+  - `username`
+  - `bot` when applicable
+
+### Button interactions
 
 ```js
-const gateway = client.gateway();
-
 gateway.onButton('role_updates', async (ctx) => {
   await client
     .guild(ctx.guildId)
@@ -204,8 +170,6 @@ gateway.onButton('role_updates', async (ctx) => {
 
   await ctx.reply('Role assigned.');
 });
-
-gateway.connect();
 ```
 
 ### Defer, then follow up
@@ -217,7 +181,20 @@ await interactionClient.defer();
 await interactionClient.followup('Done!');
 ```
 
-### Register a slash command from the portal side
+## Portal Client
+
+Use the portal client for developer-side bot management flows.
+
+```js
+import { NexusGuildPortalClient } from 'nexusguild.js';
+
+const portal = new NexusGuildPortalClient({
+  baseUrl: process.env.NEXUSGUILD_BASE_URL,
+  sessionCookie: process.env.NEXUSGUILD_SESSION_COOKIE
+});
+```
+
+### Register a slash command
 
 ```js
 await portal
@@ -250,7 +227,7 @@ import { verifyWebhookSignature } from 'nexusguild.js';
 const isValid = verifyWebhookSignature(rawBody, signatureHeader, signingKey);
 ```
 
-## Current API Surface
+## API Surface
 
 ### Client
 
@@ -259,6 +236,60 @@ const isValid = verifyWebhookSignature(rawBody, signatureHeader, signingKey);
 - `client.channel(channelId)`
 - `client.interaction(interactionId, interactionToken)`
 - `client.gateway()`
+
+### Guilds
+
+- `client.guild(id).fetch()`
+- `client.guild(id).channels.list()`
+- `client.guild(id).members.list()`
+- `client.guild(id).members.get(userId)`
+- `client.guild(id).member(userId)`
+- `client.guild(id).roles.list()`
+- `client.guild(id).roles.create(data)`
+- `client.guild(id).roles.get(roleId).edit(data)`
+- `client.guild(id).roles.get(roleId).delete()`
+
+### Members
+
+- `member.fetch()`
+- `member.addRole(roleId)`
+- `member.removeRole(roleId)`
+- `member.roles.add(roleId)`
+- `member.roles.remove(roleId)`
+
+### Channels
+
+- `client.channel(id).fetch()`
+- `client.channel(id).send(content, options)`
+- `client.channel(id).messages.list()`
+- `client.channel(id).messages.create(data)`
+- `client.channel(id).messages.get(messageId).edit(content)`
+- `client.channel(id).messages.get(messageId).delete()`
+- `client.channel(id).messages.bulkDelete(messageIds)`
+- `client.channel(id).messages.get(messageId).reactions.addMe(emoji)`
+- `client.channel(id).messages.get(messageId).reactions.removeMe(emoji)`
+- `client.channel(id).pins.list()`
+- `client.channel(id).pins.add(messageId)`
+- `client.channel(id).pins.remove(messageId)`
+
+### Gateway
+
+- `gateway.connect()`
+- `gateway.disconnect()`
+- `gateway.heartbeat()`
+- `gateway.onReady(handler)`
+- `gateway.onInteraction(handler)`
+- `gateway.onCommand(name, handler)`
+- `gateway.onButton(customId, handler)`
+- `gateway.onMemberJoin(handler)`
+- `gateway.onMemberLeave(handler)`
+- `gateway.onMemberUpdate(handler)`
+- `gateway.onMessageCreate(handler)`
+- `gateway.onReactAdd(handler)`
+- `gateway.onReactRemove(handler)`
+- `gateway.onGuildCreate(handler)`
+- `gateway.on('MESSAGE_CREATE', handler)`
+- `gateway.on('messageCreate', handler)`
 
 ### Portal Client
 
@@ -289,82 +320,7 @@ const isValid = verifyWebhookSignature(rawBody, signatureHeader, signingKey);
 - `publicClient.bot(botId)`
 - `publicClient.executeWebhook(webhookId, token, data)`
 
-### Guilds
-
-- `client.guild(id).fetch()`
-- `client.guild(id).channels.list()`
-- `client.guild(id).members.list()`
-- `client.guild(id).members.get(userId)`
-- `client.guild(id).member(userId)`
-- `client.guild(id).roles.list()`
-- `client.guild(id).roles.create(data)`
-- `client.guild(id).roles.get(roleId).edit(data)`
-- `client.guild(id).roles.get(roleId).delete()`
-
-### Members
-
-- `member.fetch()`
-- `member.addRole(roleId)`
-- `member.removeRole(roleId)`
-- `member.roles.add(roleId)`
-- `member.roles.remove(roleId)`
-
-### Gateway
-
-- `gateway.connect()`
-- `gateway.disconnect()`
-- `gateway.heartbeat()`
-- `gateway.onReady(handler)`
-- `gateway.onInteraction(handler)`
-- `gateway.onCommand(name, handler)`
-- `gateway.onButton(customId, handler)`
-- `gateway.onMemberJoin(handler)`
-- `gateway.onMemberLeave(handler)`
-- `gateway.onMemberUpdate(handler)`
-- `gateway.onMessageCreate(handler)`
-- `gateway.onReactAdd(handler)`
-- `gateway.onReactRemove(handler)`
-- `gateway.onGuildCreate(handler)`
-- `gateway.on('GUILD_MEMBER_UPDATE', handler)`
-- `gateway.on('guildMemberUpdate', handler)`
-
-### Channels
-
-- `client.channel(id).fetch()`
-- `client.channel(id).send(content, options)`
-- `client.channel(id).messages.list()`
-- `client.channel(id).messages.create(data)`
-- `client.channel(id).messages.get(messageId).edit(content)`
-- `client.channel(id).messages.get(messageId).delete()`
-- `client.channel(id).messages.bulkDelete(messageIds)`
-- `client.channel(id).messages.get(messageId).reactions.addMe(emoji)`
-- `client.channel(id).messages.get(messageId).reactions.removeMe(emoji)`
-- `client.channel(id).pins.list()`
-- `client.channel(id).pins.add(messageId)`
-- `client.channel(id).pins.remove(messageId)`
-
-### Gateway
-
-- `const gateway = client.gateway()`
-- `gateway.connect()`
-- `gateway.disconnect()`
-- `gateway.heartbeat()`
-- `gateway.onReady(handler)`
-- `gateway.onInteraction(handler)`
-- `gateway.onCommand(name, handler)`
-- `gateway.onButton(customId, handler)`
-- `gateway.onMemberJoin(handler)`
-- `gateway.onMemberLeave(handler)`
-- `gateway.onMessageCreate(handler)`
-- `gateway.onReactAdd(handler)`
-- `gateway.onReactRemove(handler)`
-- `gateway.onGuildCreate(handler)`
-- `gateway.on('MESSAGE_CREATE', handler)`
-- `gateway.on('messageCreate', handler)`
-
 ### Interaction Context
-
-Gateway interaction helpers receive an `InteractionContext` instead of the raw payload.
 
 - `ctx.isCommand(name?)`
 - `ctx.isButton(customId?)`
@@ -391,26 +347,6 @@ Gateway interaction helpers receive an `InteractionContext` instead of the raw p
 - `GatewayEvents`
 - `WebhookEvents`
 
-## Design Notes
+## Notes
 
-This SDK is a wrapper over the existing HTTP API. It does not require a new API version to become useful.
-
-That means:
-
-- Better ergonomics can ship now
-- The underlying REST API stays stable
-- Future `v2` work can remain focused on protocol changes instead of syntax sugar
-
-## Coverage Status
-
-Current package coverage now includes:
-
-- bot-token REST API under `/api/v1`
-- interaction callback and followup helpers
-- gateway connection and event helpers
-- portal/session-auth bot management helpers
-- slash command management helpers
-- offline bot webhook subscription helpers
-- webhook execution and signature verification helpers
-
-Remaining work is mostly polish and release-readiness rather than missing endpoint coverage.
+This SDK wraps the current NexusGuild HTTP API and gateway. It is designed to make common bot work easier without forcing you away from the underlying API model.

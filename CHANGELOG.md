@@ -11,3 +11,9 @@
 - Added public client helpers for public bot info and webhook execution
 - Added webhook signing and verification utilities
 - Added beginner-oriented README examples and exported constants
+
+## 0.1.1
+
+- Cleaned the npm package README to remove maintainer-only publishing notes
+- Added clearer install, requirements, quick start, and gateway event docs
+- Normalized package repository metadata for npm
